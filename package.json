@@ -1,0 +1,38 @@
+{
+  "name": "humster_serv",
+  "version": "1.0.0",
+  "description": "",
+  "type": "commonjs",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc && tsc-alias",
+    "start": "node .",
+    "dev": "nodemon",
+    "dev:inspect": "nodemon -e ts,json --exec node --inspect=127.0.0.1:9229 -r ts-node/register src/main.ts",
+    "lint": "eslint \"./src/**/*.ts\" --fix"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.2",
+    "axios-http2-adapter": "^1.0.1",
+    "dotenv": "^16.4.5",
+    "http2-wrapper": "^2.2.1",
+    "node-libcurl": "^4.0.0",
+    "undici": "^6.19.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.11",
+    "@typescript-eslint/eslint-plugin": "^7.16.1",
+    "@typescript-eslint/parser": "^7.16.1",
+    "eslint": "8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "nodemon": "^3.1.4",
+    "prettier": "^3.3.3",
+    "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.10",
+    "typescript": "^5.5.3"
+  }
+}

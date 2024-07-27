@@ -15,12 +15,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^1.7.2",
-    "axios-http2-adapter": "^1.0.1",
-    "dotenv": "^16.4.5",
-    "http2-wrapper": "^2.2.1",
-    "node-libcurl": "^4.0.0",
-    "undici": "^6.19.3"
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@types/node": "^20.14.11",

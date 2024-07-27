@@ -15,10 +15,13 @@ export class SpendAllMoney {
 		clickerUserData: ClickerUser,
 		upgradesForBuyData: UpgradeForBuy[],
 	): Promise<void> {
+		console.log(`Старт скрипта: ${new Date().toLocaleString()}`);
+		console.log(`Кол-во денег: ${clickerUserData.balanceCoins}`);
 		const isEnoughMoneyForUpgrade = upgradesForBuyData.some(
 			(upgrade) => upgrade.price < clickerUserData.balanceCoins,
 		);
 		if (!isEnoughMoneyForUpgrade) {
+			console.log('Денег недостаточно!');
 			return;
 		}
 		const filteredUpgrades = this.controller.getProfitData(upgradesForBuyData);
@@ -27,19 +30,27 @@ export class SpendAllMoney {
 				price < clickerUserData.balanceCoins && isAvailable && !cooldown,
 		);
 		if (!upgradeForBuy) {
+			console.log('Нечего покупать!');
 			return;
 		}
 		const { clickerUser, upgradesForBuy } = await this.service.buyUpgrade(
 			token,
 			upgradeForBuy.upgradeId,
 		);
-		console.dir(`${upgradeForBuy} bought!`, { depth: null });
+		console.log(`${upgradeForBuy.upgradeId} for ${upgradeForBuy.price} bought!`);
 		return await this.spendMoney(token, clickerUser, upgradesForBuy);
 	}
 
-	async startSpending(token: string): Promise<void> {
+	async startSpending(token: string, repeat: boolean = false): Promise<void> {
 		const { clickerUser } = await this.service.sync(token);
 		const { upgradesForBuy } = await this.service.upgrades(token);
+		if (repeat) {
+			await this.spendMoney(token, clickerUser, upgradesForBuy);
+			setTimeout(async () => {
+				await this.startSpending(token, repeat);
+			}, 3600000);
+			return;
+		}
 		return this.spendMoney(token, clickerUser, upgradesForBuy);
 	}
 }

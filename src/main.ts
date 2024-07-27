@@ -19,7 +19,7 @@ const start = async (): Promise<void> => {
 		// const prof = profit.getProfitData(upgradesForBuy);
 		// console.log(prof);
 		tokens.forEach(async (token) => {
-			await pipe.startSpending(token);
+			await pipe.startSpending(token, true);
 		});
 	} catch (e) {
 		console.log(e);

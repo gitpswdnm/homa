@@ -1,5 +1,5 @@
-import type { ClickerUser, SyncResponse } from '../common/types/sync';
-import type { UpgradeForBuy } from '../common/types/upgrades';
+import type { ClickerUser, SyncResponse } from '../common/types/hamster/sync';
+import type { UpgradeForBuy } from '../common/types/hamster/upgrades';
 import type { ProfitController } from '../controllers/profit.controller';
 import type { HamService } from '../services/ham.service';
 
@@ -41,16 +41,38 @@ export class SpendAllMoney {
 		return await this.spendMoney(token, clickerUser, upgradesForBuy);
 	}
 
-	async startSpending(token: string, repeat: boolean = false): Promise<void> {
+	protected async claimAllTasks(token: string): Promise<void> {
+		const { tasks } = await this.service.getListTasks(token);
+		const claimableTasks = tasks.filter(
+			(task) => task.id !== 'invite_friends' && !task.isCompleted,
+		);
+		if (!claimableTasks.length) {
+			console.log('Доступных задач для хомяка нет!');
+			return;
+		}
+		for (const task of claimableTasks) {
+			await this.service.checkTask(token, task.id);
+		}
+	}
+
+	protected async startSpending(
+		token: string,
+		repeat: boolean = false,
+	): Promise<void> {
 		const { clickerUser } = await this.service.sync(token);
 		const { upgradesForBuy } = await this.service.upgrades(token);
 		if (repeat) {
 			await this.spendMoney(token, clickerUser, upgradesForBuy);
 			setTimeout(async () => {
 				await this.startSpending(token, repeat);
-			}, 3600000);
+			}, 3 * 3600000);
 			return;
 		}
 		return this.spendMoney(token, clickerUser, upgradesForBuy);
+	}
+
+	async startPipe(token: string, isRepeatSpending?: boolean): Promise<void> {
+		await this.claimAllTasks(token);
+		await this.startSpending(token, isRepeatSpending);
 	}
 }

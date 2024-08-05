@@ -1,4 +1,4 @@
-import type { SectionEnum, UpgradeForBuy } from '../common/types/upgrades';
+import type { SectionEnum, UpgradeForBuy } from '../common/types/hamster/upgrades';
 
 interface IProfitData {
 	upgradeId: string;

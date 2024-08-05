@@ -7,7 +7,7 @@ export const HC_URL = process.env.HC_URL || '';
 
 type CurlApiReqType = Pick<RequestInit, 'body' | 'headers'>;
 
-class CurlApi {
+export class CurlApi {
 	private baseUrl: string;
 	constructor(baseUrl: string = '') {
 		this.baseUrl = baseUrl;

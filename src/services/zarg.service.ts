@@ -18,6 +18,7 @@ export class ZarGatesService {
 				'Content-Type': 'application/json',
 			},
 		});
+		console.log('quests got');
 		return response;
 	}
 

@@ -4,6 +4,7 @@ import type { BuyUpgradeResponse } from '../common/types/hamster/buyUpgrade';
 import type { UpgradesResponse } from '../common/types/hamster/upgrades';
 import type { DataForBuyUpgrade } from '../common/types/hamster/simple';
 import type { CheckTask, TasksList } from '../common/types/hamster/tasksList';
+import type { DailyCipherResponse } from '../common/types/hamster/dailyCipher';
 
 export class HamService {
 	protected api: CurlApi;
@@ -64,6 +65,16 @@ export class HamService {
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({ taskId }),
+		});
+	}
+
+	async claimDailyCipher(token: string, cipher: string): Promise<DailyCipherResponse> {
+		return this.api.post<DailyCipherResponse>('/claim-daily-cipher', {
+			headers: {
+				Authorization: `Bearer ${token}`,
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ cipher }),
 		});
 	}
 }

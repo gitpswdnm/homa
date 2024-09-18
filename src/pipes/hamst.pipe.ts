@@ -15,43 +15,51 @@ export class SpendAllMoney {
 		clickerUserData: ClickerUser,
 		upgradesForBuyData: UpgradeForBuy[],
 	): Promise<void> {
-		console.log(`Старт скрипта: ${new Date().toLocaleString()}`);
-		console.log(`Кол-во денег: ${clickerUserData.balanceCoins}`);
-		const isEnoughMoneyForUpgrade = upgradesForBuyData.some(
-			(upgrade) => upgrade.price < clickerUserData.balanceCoins,
-		);
-		if (!isEnoughMoneyForUpgrade) {
-			console.log('Денег недостаточно!');
-			return;
+		try {
+			console.log(`Старт скрипта: ${new Date().toLocaleString()}`);
+			console.log(`Кол-во денег: ${clickerUserData.balanceCoins}`);
+			const isEnoughMoneyForUpgrade = upgradesForBuyData.some(
+				(upgrade) => upgrade.price < clickerUserData.balanceCoins,
+			);
+			if (!isEnoughMoneyForUpgrade) {
+				console.log('Денег недостаточно!');
+				return;
+			}
+			const filteredUpgrades = this.controller.getProfitData(upgradesForBuyData);
+			const upgradeForBuy = filteredUpgrades.find(
+				({ price, isAvailable, cooldown }) =>
+					price < clickerUserData.balanceCoins && isAvailable && !cooldown,
+			);
+			if (!upgradeForBuy) {
+				console.log('Нечего покупать!');
+				return;
+			}
+			const { clickerUser, upgradesForBuy } = await this.service.buyUpgrade(
+				token,
+				upgradeForBuy.upgradeId,
+			);
+			console.log(`${upgradeForBuy.upgradeId} for ${upgradeForBuy.price} bought!`);
+			return await this.spendMoney(token, clickerUser, upgradesForBuy);
+		} catch (e) {
+			console.log(e);
 		}
-		const filteredUpgrades = this.controller.getProfitData(upgradesForBuyData);
-		const upgradeForBuy = filteredUpgrades.find(
-			({ price, isAvailable, cooldown }) =>
-				price < clickerUserData.balanceCoins && isAvailable && !cooldown,
-		);
-		if (!upgradeForBuy) {
-			console.log('Нечего покупать!');
-			return;
-		}
-		const { clickerUser, upgradesForBuy } = await this.service.buyUpgrade(
-			token,
-			upgradeForBuy.upgradeId,
-		);
-		console.log(`${upgradeForBuy.upgradeId} for ${upgradeForBuy.price} bought!`);
-		return await this.spendMoney(token, clickerUser, upgradesForBuy);
 	}
 
 	protected async claimAllTasks(token: string): Promise<void> {
-		const { tasks } = await this.service.getListTasks(token);
-		const claimableTasks = tasks.filter(
-			(task) => task.id !== 'invite_friends' && !task.isCompleted,
-		);
-		if (!claimableTasks.length) {
-			console.log('Доступных задач для хомяка нет!');
-			return;
-		}
-		for (const task of claimableTasks) {
-			await this.service.checkTask(token, task.id);
+		try {
+			const { tasks } = await this.service.getListTasks(token);
+			const claimableTasks = tasks.filter(
+				(task) => task.id !== 'invite_friends' && !task.isCompleted,
+			);
+			if (!claimableTasks.length) {
+				console.log('Доступных задач для хомяка нет!');
+				return;
+			}
+			for (const task of claimableTasks) {
+				await this.service.checkTask(token, task.id);
+			}
+		} catch (e) {
+			console.log(e);
 		}
 	}
 
@@ -59,20 +67,56 @@ export class SpendAllMoney {
 		token: string,
 		repeat: boolean = false,
 	): Promise<void> {
-		const { clickerUser } = await this.service.sync(token);
-		const { upgradesForBuy } = await this.service.upgrades(token);
-		if (repeat) {
-			await this.spendMoney(token, clickerUser, upgradesForBuy);
-			setTimeout(async () => {
-				await this.startSpending(token, repeat);
-			}, 3 * 3600000);
-			return;
+		try {
+			const { clickerUser } = await this.service.sync(token);
+			const { upgradesForBuy } = await this.service.upgrades(token);
+			if (repeat) {
+				await this.spendMoney(token, clickerUser, upgradesForBuy);
+				setTimeout(async () => {
+					await this.startSpending(token, repeat);
+				}, 3 * 3600000);
+				return;
+			}
+			return this.spendMoney(token, clickerUser, upgradesForBuy);
+		} catch (e) {
+			console.log(e);
 		}
-		return this.spendMoney(token, clickerUser, upgradesForBuy);
 	}
 
-	async startPipe(token: string, isRepeatSpending?: boolean): Promise<void> {
-		await this.claimAllTasks(token);
-		await this.startSpending(token, isRepeatSpending);
+	protected async claimMoney(token: string, repeat: boolean = false): Promise<void> {
+		try {
+			if (repeat) {
+				const { clickerUser } = await this.service.sync(token);
+				console.log(`Старт скрипта: ${new Date().toLocaleString()}`);
+				console.log(`денег сейчас: ${clickerUser.balanceCoins}`);
+				setTimeout(async () => {
+					await this.claimMoney(token, repeat);
+				}, 3 * 3600000);
+				return;
+			}
+			const { clickerUser } = await this.service.sync(token);
+			console.log(`Старт скрипта: ${new Date().toLocaleString()}`);
+			console.log(`денег сейчас: ${clickerUser.balanceCoins}`);
+			return;
+		} catch (e) {
+			console.log(e);
+		}
+	}
+
+	async startPipe(
+		token: string,
+		isRepeatSpending?: boolean,
+		onlyClaim?: boolean,
+	): Promise<void> {
+		try {
+			await this.claimAllTasks(token);
+			if (onlyClaim) {
+				await this.claimMoney(token, isRepeatSpending);
+			} else {
+				await this.startSpending(token, isRepeatSpending);
+			}
+		} catch (e) {
+			console.log(e);
+		}
 	}
 }

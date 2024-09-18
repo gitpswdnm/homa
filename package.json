@@ -7,6 +7,7 @@
   "scripts": {
     "build": "tsc && tsc-alias",
     "start": "node .",
+    "start:sync": "node ./dist/main.sync.js",
     "dev": "nodemon",
     "dev:inspect": "nodemon -e ts,json --exec node --inspect=127.0.0.1:9229 -r ts-node/register src/main.ts",
     "lint": "eslint \"./src/**/*.ts\" --fix"
@@ -15,7 +16,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dotenv": "^16.4.5"
+    "@prisma/client": "^5.19.1",
+    "assemblyai": "^4.7.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "grammy": "^1.30.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.11",
@@ -26,6 +31,7 @@
     "eslint-plugin-prettier": "^5.2.1",
     "nodemon": "^3.1.4",
     "prettier": "^3.3.3",
+    "prisma": "^5.19.1",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.10",
     "typescript": "^5.5.3"

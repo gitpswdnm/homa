@@ -7,19 +7,24 @@ export class ZarGatesPipe {
 	}
 
 	async claimAllQuests(token: string): Promise<void> {
-		console.log('start claim quests ZarGates');
-		const { quests } = await this.service.getQuests(token);
-		quests.forEach(async (quest) => {
-			if (
-				quest.type === 'quiz' ||
-				quest.type === 'zargates_scores' ||
-				quest.type === 'amikin_quest' ||
-				quest.status === 'completed'
-			) {
-				return;
-			}
-			const response = await this.service.verifyQuest(token, quest.id);
-			console.log(response.message);
-		});
+		try {
+			console.log('start claim quests ZarGates');
+			const { quests } = await this.service.getQuests(token);
+			quests.forEach(async (quest) => {
+				if (
+					quest.type === 'quiz' ||
+					quest.type === 'zargates_scores' ||
+					quest.type === 'amikin_quest' ||
+					quest.status === 'completed'
+				) {
+					return;
+				}
+				const response = await this.service.verifyQuest(token, quest.id);
+				// console.log(response.message);
+			});
+			console.log('quests claimed');
+		} catch (error) {
+			console.log(error);
+		}
 	}
 }

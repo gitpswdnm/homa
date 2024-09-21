@@ -1,14 +1,11 @@
 import 'dotenv/config';
-import { HamService } from './services/ham.service';
-import { ProfitController } from './controllers/profit.controller';
-import { SpendAllMoney } from './pipes/hamst.pipe';
 import { CurlApi } from './common/api';
-import { ZarGatesService } from './services/zarg.service';
-import { ZarGatesPipe } from './pipes/zargates.pipe';
-import { TelegramService } from './services/telegram.service';
 import { ProfitInterludeController } from './controllers/profit.interlude.controller';
 import { SpendAllInterludeMoney } from './pipes/hamst.interlude.pipe';
+import { ZarGatesPipe } from './pipes/zargates.pipe';
 import { HamInterludeService } from './services/ham.interlude.service';
+import { TelegramService } from './services/telegram.service';
+import { ZarGatesService } from './services/zarg.service';
 
 // const hamsterTokens = process.env.HAMSTER_TOKENS?.split(',') ?? [''];
 const hamsterInterludeTokens = process.env.HAMSTER_INTERLUDE_TOKENS?.split(',') ?? [

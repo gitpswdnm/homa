@@ -16,7 +16,10 @@ interface IProfitData {
 export class ProfitInterludeController {
 	getProfitData(upgrades: UpgradeForBuyInterlude[]): IProfitData[] {
 		const profitArr = upgrades.reduce<IProfitData[]>((acc, cur) => {
-			const costPointsPerHour = cur.price / cur.profitPerHourDelta || 0;
+			const costPointsPerHour =
+				cur.price === 0 && cur.profitPerHourDelta > 0
+					? 0.00001
+					: cur.price / cur.profitPerHourDelta || 0;
 			if (
 				costPointsPerHour > 0 &&
 				Number.isFinite(costPointsPerHour) &&

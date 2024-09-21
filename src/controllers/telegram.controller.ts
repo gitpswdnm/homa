@@ -1,5 +1,4 @@
-/* // telegram.controller.ts
-import type { Bot, Context } from 'grammy';
+/* import type { Bot, Context } from 'grammy';
 import type { ITelegramOptions } from '../services/telegram.service';
 import { TelegramService } from '../services/telegram.service';
 
@@ -67,3 +66,28 @@ export class TelegramController {
 	}
 }
  */
+
+// registerCommand(
+// 	command: MaybeArray<StringWithCommandSuggestions>,
+// 	handler: (ctx: Context) => Promise<void>,
+// ): void {
+// 	this.bot.command(command, handler);
+// }
+
+// registerOnListener(
+// 	command: FilterQuery | FilterQuery[],
+// 	handler: (ctx: Context) => Promise<void>,
+// ): void {
+// 	this.bot.on(command, handler);
+// }
+
+// registerMiddleware(
+// 	middleware: (ctx: Context, next: NextFunction) => Promise<void>,
+// ): void {
+// 	this.bot.use(middleware);
+// }
+
+// startBot(): void {
+// 	this.bot.start();
+// 	console.log('Bot Started!');
+// }

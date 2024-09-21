@@ -1,7 +1,8 @@
-import type { Context } from 'grammy';
-import { Bot, GrammyError, HttpError } from 'grammy';
+import type { Context, FilterQuery, NextFunction } from 'grammy';
+import { Bot, GrammyError, HttpError, InlineKeyboard } from 'grammy';
 import { AssemblyAIService } from './assemblyai.service';
 import { PrismaController } from '../controllers/prisma.contoller';
+import type { MaybeArray, StringWithCommandSuggestions } from 'grammy/out/context';
 
 export interface ITelegramOptions {
 	token: string;
@@ -11,10 +12,10 @@ export interface ITelegramOptions {
 }
 
 export class TelegramService {
-	protected bot: Bot;
-	protected options: ITelegramOptions;
-	aiClient: AssemblyAIService;
-	prisma: PrismaController;
+	private bot: Bot;
+	private options: ITelegramOptions;
+	private aiClient: AssemblyAIService;
+	private prisma: PrismaController;
 	constructor(options: ITelegramOptions) {
 		this.bot = new Bot(options.token);
 		this.options = options;
@@ -22,12 +23,19 @@ export class TelegramService {
 		this.prisma = new PrismaController();
 	}
 
-	protected async isAuth(ctx: Context): Promise<boolean> {
+	async isAuth(ctx: Context): Promise<boolean> {
 		return Boolean(
 			ctx.from &&
 				(this.options.allowedUserIds.includes(String(ctx.from?.id)) ||
 					(await this.prisma.checkAuth(ctx.from.id))),
 		);
+	}
+
+	async sendVoiceToText(userId: number, filePath: string): Promise<string> {
+		const text = await this.aiClient.convert(
+			`${this.options.fileBaseUrl}${this.options.token}/${filePath}`,
+		);
+		return text;
 	}
 
 	protected async commands(): Promise<void> {
@@ -45,19 +53,60 @@ export class TelegramService {
 		this.bot.command('start', async (ctx) => {
 			const text = (await this.isAuth(ctx))
 				? 'Hello! Welcome back!'
-				: "Hello! You're not registered at the bot! If you have the code use command register!";
+				: "Hello! You're not registered at the bot! Use command register!";
 			const response = await ctx.reply(text, {
 				reply_parameters: { message_id: ctx.msgId },
 			});
 		});
 
 		this.bot.command('register', async (ctx) => {
-			const text = (await this.isAuth(ctx))
+			if (!ctx.from) {
+				return;
+			}
+			const isRequested = await this.prisma.addAuthRequest(ctx.from?.id);
+			if (!isRequested) {
+				await ctx.reply(
+					'You have already sent a registration request! You must wait at least 24 hours before sending it again!😡',
+					{
+						reply_parameters: { message_id: ctx.msgId },
+					},
+				);
+				return;
+			}
+			const isAuth = await this.isAuth(ctx);
+			const text = isAuth
 				? 'You are already registered!'
-				: 'Send me the code for registration.';
+				: 'Your registration request has been sent to the admin! You will receive the response here. Wait please 🙂';
 			const response = await ctx.reply(text, {
 				reply_parameters: { message_id: ctx.msgId },
 			});
+			if (!isAuth) {
+				const inlineKeyboard = new InlineKeyboard()
+					.text('Approve', 'approve-button')
+					.text('Reject', 'reject-button');
+				const fromString = JSON.stringify(ctx.from);
+				const text = `${ctx.from.id} user want to register to bot.\n${fromString}`;
+				await this.bot.api.sendMessage(this.options.allowedUserIds[0], text, {
+					reply_markup: inlineKeyboard,
+				});
+			}
+		});
+
+		this.bot.callbackQuery(['approve-button', 'reject-button'], async (ctx) => {
+			await ctx.answerCallbackQuery();
+			if (ctx.callbackQuery.data === 'approve-button') {
+				// console.dir(ctx.callbackQuery, { depth: null });
+				const { id } = JSON.parse(
+					ctx.callbackQuery.message?.text?.split('\n')[1] as string,
+				);
+				if (Number.isFinite(id)) {
+					await this.prisma.register(id);
+					this.bot.api.sendMessage(
+						id,
+						'You have been registered in the service. Now you can send audio files for transcription into text! Enjoy using the service!🙂',
+					);
+				}
+			}
 		});
 	}
 
@@ -66,8 +115,7 @@ export class TelegramService {
 			if (await this.isAuth(ctx)) {
 				await next();
 			} else {
-				console.log(`Unauthorize user with id ${ctx.from?.id} send the message!`);
-				await ctx.reply('You have no right to use this bot!');
+				await ctx.reply('You have no right to use this bot! Use /register command!');
 			}
 		});
 	}
@@ -84,6 +132,9 @@ export class TelegramService {
 
 		this.bot.on(['message:voice', 'message:audio'], async (ctx) => {
 			const { file_path } = await ctx.getFile();
+			if (!file_path) {
+				return;
+			}
 			await ctx.reply('Voice to text started!');
 			if (ctx.from.id !== Number(this.options.allowedUserIds[0])) {
 				await this.bot.api.sendMessage(
@@ -92,9 +143,8 @@ export class TelegramService {
 				);
 			}
 
-			const text = await this.aiClient.convert(
-				`${this.options.fileBaseUrl}${this.options.token}/${file_path}`,
-			);
+			const text = await this.sendVoiceToText(ctx.from.id, file_path);
+
 			// console.log(text);
 			await ctx.reply(text, {
 				reply_parameters: { message_id: ctx.msgId },

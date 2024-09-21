@@ -1,9 +1,9 @@
-import type { User, Transcription } from '@prisma/client';
+import type { User, Transcription, AuthRequestUser } from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
 
 interface UserDto {
-	username: string;
 	telegramId: number;
+	username?: string;
 }
 
 interface TranscriptionDto {
@@ -32,5 +32,17 @@ export class PrismaService {
 	}
 	async getAllTranscriptionsByUserId(userId: number): Promise<Transcription[]> {
 		return await this.client.transcription.findMany({ where: { userId } });
+	}
+	async addAuthRequest(telegramId: number): Promise<AuthRequestUser> {
+		return await this.client.authRequestUser.create({ data: { telegramId } });
+	}
+	async findAuthRequest(telegramId: number): Promise<AuthRequestUser | null> {
+		return await this.client.authRequestUser.findUnique({ where: { telegramId } });
+	}
+	async deleteAuthRequestByTelegramId(telegramId: number): Promise<AuthRequestUser> {
+		return await this.client.authRequestUser.delete({ where: { telegramId } });
+	}
+	async deleteAuthRequestById(id: number): Promise<AuthRequestUser> {
+		return await this.client.authRequestUser.delete({ where: { id } });
 	}
 }

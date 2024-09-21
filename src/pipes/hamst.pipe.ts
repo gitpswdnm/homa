@@ -66,6 +66,7 @@ export class SpendAllMoney {
 	protected async startSpending(
 		token: string,
 		repeat: boolean = false,
+		interval: number = 3 * 3600000,
 	): Promise<void> {
 		try {
 			const { clickerUser } = await this.service.sync(token);
@@ -74,7 +75,7 @@ export class SpendAllMoney {
 				await this.spendMoney(token, clickerUser, upgradesForBuy);
 				setTimeout(async () => {
 					await this.startSpending(token, repeat);
-				}, 3 * 3600000);
+				}, interval);
 				return;
 			}
 			return this.spendMoney(token, clickerUser, upgradesForBuy);
@@ -83,7 +84,11 @@ export class SpendAllMoney {
 		}
 	}
 
-	protected async claimMoney(token: string, repeat: boolean = false): Promise<void> {
+	protected async claimMoney(
+		token: string,
+		repeat: boolean = false,
+		interval: number = 3 * 3600000,
+	): Promise<void> {
 		try {
 			if (repeat) {
 				const { clickerUser } = await this.service.sync(token);
@@ -91,7 +96,7 @@ export class SpendAllMoney {
 				console.log(`денег сейчас: ${clickerUser.balanceCoins}`);
 				setTimeout(async () => {
 					await this.claimMoney(token, repeat);
-				}, 3 * 3600000);
+				}, interval);
 				return;
 			}
 			const { clickerUser } = await this.service.sync(token);
@@ -107,13 +112,14 @@ export class SpendAllMoney {
 		token: string,
 		isRepeatSpending?: boolean,
 		onlyClaim?: boolean,
+		interval?: number,
 	): Promise<void> {
 		try {
 			await this.claimAllTasks(token);
 			if (onlyClaim) {
-				await this.claimMoney(token, isRepeatSpending);
+				await this.claimMoney(token, isRepeatSpending, interval);
 			} else {
-				await this.startSpending(token, isRepeatSpending);
+				await this.startSpending(token, isRepeatSpending, interval);
 			}
 		} catch (e) {
 			console.log(e);

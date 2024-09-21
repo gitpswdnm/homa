@@ -24,7 +24,6 @@ export class CurlApi {
 		if (body) {
 			bodyString = `-d '${body}' `;
 		}
-		console.log(bodyString);
 		let headersString = '';
 		if (headers) {
 			const entries = Object.entries(headers);
@@ -35,6 +34,7 @@ export class CurlApi {
 		const { stdout } = await execAsync(
 			`curl -X POST ${this.baseUrl}${url} ${headersString}${bodyString}`,
 		);
+		// console.log(stdout);
 
 		return JSON.parse(stdout) as T;
 	}
@@ -59,4 +59,4 @@ export class CurlApi {
 	}
 }
 
-export const $api = new CurlApi(HC_URL);
+// export const $api = new CurlApi(HC_URL);

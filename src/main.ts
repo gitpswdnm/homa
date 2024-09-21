@@ -5,39 +5,56 @@ import { SpendAllMoney } from './pipes/hamst.pipe';
 import { CurlApi } from './common/api';
 import { ZarGatesService } from './services/zarg.service';
 import { ZarGatesPipe } from './pipes/zargates.pipe';
+import { TelegramService } from './services/telegram.service';
+import { ProfitInterludeController } from './controllers/profit.interlude.controller';
+import { SpendAllInterludeMoney } from './pipes/hamst.interlude.pipe';
+import { HamInterludeService } from './services/ham.interlude.service';
 
-const hamsterTokens = process.env.HAMSTER_TOKENS?.split(',') || [''];
-const zargTokens = process.env.ZARG_TOKENS?.split(',') || [''];
-const HC_URL = process.env.HC_URL || '';
-const ZARG_URL = process.env.ZARG_URL || '';
+// const hamsterTokens = process.env.HAMSTER_TOKENS?.split(',') ?? [''];
+const hamsterInterludeTokens = process.env.HAMSTER_INTERLUDE_TOKENS?.split(',') ?? [
+	'',
+];
+const zargTokens = process.env.ZARG_TOKENS?.split(',') ?? [''];
+// const HC_URL = process.env.HC_URL ?? '';
+const HC_INTER_URL = process.env.HC_INTER_URL ?? '';
+const ZARG_URL = process.env.ZARG_URL ?? '';
 
-const hamCurl = new CurlApi(HC_URL);
+const telegramToken = process.env.TELEGRAM_BOT_TOKEN ?? '';
+const allowedIds = process.env.TELEGRAM_USER_IDS?.split(',') ?? [''];
+const assemblyKey = process.env.ASSAMBLY_AI_KEY ?? '';
+const telegramDownloadUrl = process.env.TELEGRAM_DOWNLOAD_URL ?? '';
+
+// const hamCurl = new CurlApi(HC_URL);
+const hamInterCurl = new CurlApi(HC_INTER_URL);
 const zargCurl = new CurlApi(ZARG_URL);
-const hamService = new HamService(hamCurl);
+// const hamService = new HamService(hamCurl);
+const hamInterService = new HamInterludeService(hamInterCurl);
 const zargService = new ZarGatesService(zargCurl);
-const profit = new ProfitController();
-const hamsterPipe = new SpendAllMoney(hamService, profit);
+// const profit = new ProfitController();
+const profitInter = new ProfitInterludeController();
+// const hamsterPipe = new SpendAllMoney(hamService, profit);
+const hamsterInterludePipe = new SpendAllInterludeMoney(hamInterService, profitInter);
 const zargPipe = new ZarGatesPipe(zargService);
+
+const botService = new TelegramService({
+	token: telegramToken,
+	allowedUserIds: allowedIds,
+	assemblyAIKey: assemblyKey,
+	fileBaseUrl: telegramDownloadUrl,
+});
 
 const start = async (): Promise<void> => {
 	try {
-		// await hamService.sync(tokens[0]);
-		// hamService.auth(tokens[1]);
-		// hamService.upgrades(tokens[0]);
-		// const { upgradesForBuy } = await hamService.upgrades(tokens[0]);
-		// const prof = profit.getProfitData(upgradesForBuy);
-		// console.log(prof);
 		zargTokens.forEach(async (token) => {
 			await zargPipe.claimAllQuests(token);
 		});
-		hamsterTokens.forEach(async (token) => {
-			await hamsterPipe.startPipe(token, true);
+		hamsterInterludeTokens.forEach(async (token) => {
+			await hamsterInterludePipe.startPipe(token, true, false);
 		});
+		botService.start();
 	} catch (e) {
 		console.log(e);
 	}
 };
 
 start();
-
-//126_180_400
